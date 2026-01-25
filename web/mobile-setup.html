@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Mobile Setup - Stash</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      background: #f9fafb;
+      padding: 20px;
+      padding-top: max(20px, env(safe-area-inset-top));
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      padding: 40px 30px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: #6b7280;
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: #111827;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #374151;
+      margin-top: 32px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      margin-bottom: 16px;
+      color: #4b5563;
+    }
+
+    .platform-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .tab {
+      padding: 12px 24px;
+      background: transparent;
+      border: none;
+      font-size: 16px;
+      font-weight: 500;
+      color: #6b7280;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      color: #6366f1;
+      border-bottom-color: #6366f1;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .steps {
+      counter-reset: step;
+    }
+
+    .step {
+      margin-bottom: 32px;
+      padding-left: 60px;
+      position: relative;
+    }
+
+    .step:before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 40px;
+      height: 40px;
+      background: #6366f1;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    .step-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+
+    .step-content {
+      color: #4b5563;
+    }
+
+    .highlight-box {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 16px;
+      margin: 24px 0;
+      border-radius: 8px;
+    }
+
+    .highlight-box.success {
+      background: #f0fdf4;
+      border-left-color: #10b981;
+    }
+
+    .highlight-box.warning {
+      background: #fffbeb;
+      border-left-color: #f59e0b;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #6366f1;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      margin-top: 16px;
+      transition: background 0.2s;
+    }
+
+    .button:hover {
+      background: #4f46e5;
+    }
+
+    .button.secondary {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .button.secondary:hover {
+      background: #d1d5db;
+    }
+
+    code {
+      background: #f3f4f6;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 14px;
+      color: #dc2626;
+    }
+
+    ul {
+      margin-left: 20px;
+      margin-bottom: 16px;
+    }
+
+    li {
+      margin-bottom: 8px;
+      color: #4b5563;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .comparison-table th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .comparison-table td {
+      color: #4b5563;
+    }
+
+    .checkmark {
+      color: #10b981;
+      font-weight: 600;
+    }
+
+    .xmark {
+      color: #ef4444;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 24px 20px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .platform-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .step {
+        padding-left: 50px;
+      }
+
+      .step:before {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📱 Mobile Setup Guide</h1>
+    <p class="subtitle">Save articles from any app on your phone with just 2 taps</p>
+
+    <div class="highlight-box success">
+      <strong>What you'll be able to do:</strong>
+      <ul style="margin-top: 8px; margin-bottom: 0;">
+        <li>Save articles from Safari, Chrome, NYT app, Substack, Twitter, and more</li>
+        <li>Extract full article content (even from paywalled sites you're logged into)</li>
+        <li>Save with 2 taps: Share → Stash</li>
+        <li>Works offline with automatic syncing</li>
+      </ul>
+    </div>
+
+    <div class="platform-tabs">
+      <button class="tab active" onclick="switchTab('ios')">📱 iOS / iPhone</button>
+      <button class="tab" onclick="switchTab('android')">🤖 Android</button>
+    </div>
+
+    <!-- iOS Content -->
+    <div id="ios-content" class="tab-content active">
+      <h2>Option 1: Web Share Target (Recommended)</h2>
+      <p>Best for quick saves of public articles. Works everywhere on iOS.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-title">Open Stash in Safari</div>
+          <div class="step-content">
+            Make sure you're viewing this page in Safari (not Chrome or another browser).
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-title">Install as App</div>
+          <div class="step-content">
+            <p>Tap the Share button (square with arrow) at the bottom of Safari</p>
+            <p>Scroll down and tap <strong>"Add to Home Screen"</strong></p>
+            <p>Tap <strong>"Add"</strong> in the top right</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-title">Open Stash from Home Screen</div>
+          <div class="step-content">
+            Find the Stash icon on your home screen and tap it once. This registers it as a share target.
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-title">Test It!</div>
+          <div class="step-content">
+            <p>Open Safari and go to any article (try nytimes.com or any blog)</p>
+            <p>Tap the Share button</p>
+            <p>Scroll down to find <strong>"Stash"</strong> in the list</p>
+            <p>Tap "Stash" to save the article</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="highlight-box">
+        <strong>✨ That's it!</strong> Now you can save from ANY app that has a Share button - NYT, Substack, Twitter, Safari, etc.
+      </div>
+
+      <h2>Option 2: iOS Shortcut (For Paywalled Content)</h2>
+      <p>Use this for articles behind paywalls that you're logged into (NYT, Medium, Substack, etc.)</p>
+
+      <a href="../ios-shortcut/README.md" class="button">View iOS Shortcut Setup Guide</a>
+
+      <div class="highlight-box warning" style="margin-top: 24px;">
+        <strong>💡 Pro Tip:</strong> Use both methods!
+        <ul style="margin-top: 8px; margin-bottom: 0;">
+          <li>Web Share Target for quick public articles</li>
+          <li>iOS Shortcut for paywalled content you're logged into</li>
+        </ul>
+      </div>
+
+      <h2>Comparison</h2>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Web Share Target</th>
+            <th>iOS Shortcut</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Setup time</td>
+            <td>30 seconds</td>
+            <td>5 minutes</td>
+          </tr>
+          <tr>
+            <td>Works with paywalls</td>
+            <td><span class="xmark">✕</span></td>
+            <td><span class="checkmark">✓</span></td>
+          </tr>
+          <tr>
+            <td>Offline support</td>
+            <td><span class="checkmark">✓</span></td>
+            <td><span class="xmark">✕</span></td>
+          </tr>
+          <tr>
+            <td>Save highlights</td>
+            <td><span class="xmark">✕</span></td>
+            <td><span class="checkmark">✓</span></td>
+          </tr>
+          <tr>
+            <td>Works in all apps</td>
+            <td><span class="checkmark">✓</span></td>
+            <td><span class="checkmark">✓</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Android Content -->
+    <div id="android-content" class="tab-content">
+      <h2>Web Share Target Setup</h2>
+      <p>Install Stash as a PWA and it will appear in your share menu.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-title">Open Stash in Chrome</div>
+          <div class="step-content">
+            Make sure you're viewing this page in Chrome (the default Android browser).
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-title">Install the App</div>
+          <div class="step-content">
+            <p>Tap the menu (⋮) in the top right</p>
+            <p>Tap <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong></p>
+            <p>Tap <strong>"Install"</strong> or <strong>"Add"</strong></p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-title">Open Stash from Home Screen</div>
+          <div class="step-content">
+            Find the Stash icon and tap it once. This registers it as a share target.
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-title">Test It!</div>
+          <div class="step-content">
+            <p>Open Chrome and go to any article</p>
+            <p>Tap the Share button</p>
+            <p>Look for <strong>"Stash"</strong> in the share menu</p>
+            <p>Tap "Stash" to save the article</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="highlight-box success">
+        <strong>✅ Done!</strong> You can now save from any Android app that has a share function.
+      </div>
+
+      <div class="highlight-box">
+        <strong>Note:</strong> Android's Web Share Target works great for most public articles. For paywalled content, you may need to use the bookmarklet method (see below).
+      </div>
+    </div>
+
+    <h2>Alternative: Bookmarklet (All Platforms)</h2>
+    <p>Works on both iOS and Android, but requires a few more taps to access.</p>
+
+    <a href="../bookmarklet/install.html" class="button secondary">View Bookmarklet Setup</a>
+
+    <h2>Troubleshooting</h2>
+
+    <h3>Stash doesn't appear in share menu</h3>
+    <ul>
+      <li>Make sure you installed Stash as a PWA (Add to Home Screen)</li>
+      <li>Open the Stash app at least once from your home screen</li>
+      <li>Try restarting your phone</li>
+      <li>Make sure you're sharing a URL/web page (not an image or file)</li>
+    </ul>
+
+    <h3>Article content is missing or incomplete</h3>
+    <ul>
+      <li>This happens with paywalled sites - use the iOS Shortcut method instead</li>
+      <li>Some sites block content extraction - the article will still save with URL and title</li>
+      <li>You can manually open the article later from Stash</li>
+    </ul>
+
+    <h3>Offline saves not syncing</h3>
+    <ul>
+      <li>Make sure you have an internet connection</li>
+      <li>Open the Stash app - this triggers sync</li>
+      <li>Check browser console for errors (for developers)</li>
+    </ul>
+
+    <h3>Share button missing on some apps</h3>
+    <ul>
+      <li>Not all apps support sharing web URLs</li>
+      <li>Try copying the URL and pasting it directly in Stash</li>
+      <li>Or open the link in Safari/Chrome first, then share from there</li>
+    </ul>
+
+    <h2>Need Help?</h2>
+    <p>If you're still having issues, check the main documentation or open an issue on GitHub.</p>
+
+    <a href="/" class="button">Back to Stash</a>
+  </div>
+
+  <script>
+    function switchTab(platform) {
+      // Remove active class from all tabs and content
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+
+      // Add active class to selected tab and content
+      event.target.classList.add('active');
+      document.getElementById(platform + '-content').classList.add('active');
+    }
+
+    // Detect platform and auto-switch
+    window.addEventListener('DOMContentLoaded', () => {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
+
+      if (isAndroid) {
+        switchTab('android');
+        document.querySelector('.tab[onclick*="android"]').click();
+      }
+    });
+  </script>
+</body>
+</html>
