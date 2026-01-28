@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PWA Diagnostic</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    h1 { color: #6366f1; }
+    .check { margin: 10px 0; padding: 10px; border-radius: 8px; }
+    .pass { background: #d1fae5; color: #065f46; }
+    .fail { background: #fee2e2; color: #991b1b; }
+    .warn { background: #fef3c7; color: #92400e; }
+    .info { background: #e0e7ff; color: #3730a3; }
+    pre { background: #f3f4f6; padding: 10px; overflow-x: auto; font-size: 12px; }
+    button {
+      background: #6366f1; color: white; border: none;
+      padding: 12px 24px; border-radius: 8px; font-size: 16px;
+      margin: 10px 0; cursor: pointer;
+    }
+    button:disabled { background: #9ca3af; }
+  </style>
+</head>
+<body>
+  <h1>PWA Diagnostic</h1>
+  <p>This page checks if your app meets Chrome's PWA installation requirements.</p>
+
+  <div id="results"></div>
+
+  <button id="installBtn" disabled>Install App (waiting for prompt...)</button>
+
+  <h2>Manual Checks</h2>
+  <div id="manual"></div>
+
+  <script>
+    const results = document.getElementById('results');
+    const manual = document.getElementById('manual');
+    const installBtn = document.getElementById('installBtn');
+    let deferredPrompt = null;
+
+    function addResult(text, status) {
+      const div = document.createElement('div');
+      div.className = `check ${status}`;
+      div.innerHTML = text;
+      results.appendChild(div);
+    }
+
+    // Check HTTPS
+    if (location.protocol === 'https:') {
+      addResult('✓ HTTPS: Yes', 'pass');
+    } else {
+      addResult('✗ HTTPS: No (required for PWA)', 'fail');
+    }
+
+    // Check Service Worker
+    if ('serviceWorker' in navigator) {
+      addResult('✓ Service Worker API: Supported', 'pass');
+
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (reg) {
+          addResult(`✓ Service Worker: Registered (scope: ${reg.scope})`, 'pass');
+        } else {
+          addResult('✗ Service Worker: Not registered', 'fail');
+          // Try to register it
+          navigator.serviceWorker.register('/sw.js')
+            .then(r => addResult(`✓ Service Worker: Just registered! (scope: ${r.scope})`, 'pass'))
+            .catch(e => addResult(`✗ Service Worker registration failed: ${e.message}`, 'fail'));
+        }
+      });
+    } else {
+      addResult('✗ Service Worker API: Not supported', 'fail');
+    }
+
+    // Check Manifest
+    const manifestLink = document.querySelector('link[rel="manifest"]');
+    if (manifestLink) {
+      addResult('✓ Manifest link: Found', 'pass');
+
+      fetch(manifestLink.href)
+        .then(r => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
+        .then(manifest => {
+          addResult('✓ Manifest: Valid JSON', 'pass');
+
+          // Check required fields
+          if (manifest.name) addResult(`✓ name: "${manifest.name}"`, 'pass');
+          else addResult('✗ name: Missing', 'fail');
+
+          if (manifest.short_name) addResult(`✓ short_name: "${manifest.short_name}"`, 'pass');
+          else addResult('⚠ short_name: Missing (recommended)', 'warn');
+
+          if (manifest.start_url) addResult(`✓ start_url: "${manifest.start_url}"`, 'pass');
+          else addResult('✗ start_url: Missing', 'fail');
+
+          if (manifest.display === 'standalone' || manifest.display === 'fullscreen') {
+            addResult(`✓ display: "${manifest.display}"`, 'pass');
+          } else {
+            addResult(`✗ display: "${manifest.display || 'missing'}" (need "standalone" or "fullscreen")`, 'fail');
+          }
+
+          if (manifest.icons && manifest.icons.length > 0) {
+            addResult(`✓ icons: ${manifest.icons.length} defined`, 'pass');
+
+            // Check for 192 and 512
+            const has192 = manifest.icons.some(i => i.sizes && i.sizes.includes('192'));
+            const has512 = manifest.icons.some(i => i.sizes && i.sizes.includes('512'));
+
+            if (has192) addResult('✓ 192x192 icon: Found', 'pass');
+            else addResult('✗ 192x192 icon: Missing (required)', 'fail');
+
+            if (has512) addResult('✓ 512x512 icon: Found', 'pass');
+            else addResult('✗ 512x512 icon: Missing (required)', 'fail');
+
+            // Check if icons actually load
+            manifest.icons.forEach(icon => {
+              const img = new Image();
+              img.onload = () => addResult(`✓ Icon loads: ${icon.src} (${img.width}x${img.height})`, 'pass');
+              img.onerror = () => addResult(`✗ Icon failed to load: ${icon.src}`, 'fail');
+              img.src = new URL(icon.src, manifestLink.href).href;
+            });
+          } else {
+            addResult('✗ icons: Missing', 'fail');
+          }
+
+          // Show full manifest
+          manual.innerHTML += `<h3>Manifest Contents:</h3><pre>${JSON.stringify(manifest, null, 2)}</pre>`;
+        })
+        .catch(e => {
+          addResult(`✗ Manifest error: ${e.message}`, 'fail');
+        });
+    } else {
+      addResult('✗ Manifest link: Not found', 'fail');
+    }
+
+    // Check display mode
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      addResult('ℹ Display mode: Running as installed PWA', 'info');
+    } else {
+      addResult('ℹ Display mode: Running in browser', 'info');
+    }
+
+    // Listen for install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      addResult('✓ beforeinstallprompt: FIRED! App is installable!', 'pass');
+      installBtn.disabled = false;
+      installBtn.textContent = 'Install App';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        addResult(`ℹ Install outcome: ${outcome}`, 'info');
+        deferredPrompt = null;
+        installBtn.disabled = true;
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      addResult('✓ App installed successfully!', 'pass');
+    });
+
+    // Timeout message
+    setTimeout(() => {
+      if (!deferredPrompt) {
+        addResult('⚠ beforeinstallprompt: Not fired after 5 seconds. Chrome may not consider this installable, or app may already be installed.', 'warn');
+      }
+    }, 5000);
+  </script>
+</body>
+</html>
