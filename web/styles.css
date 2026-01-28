@@ -393,6 +393,17 @@ input, select {
   border-top: 1px solid var(--border);
 }
 
+.install-btn {
+  background: var(--primary);
+  color: white;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.install-btn:hover {
+  background: #4f46e5;
+}
+
 /* Main Content */
 .main {
   flex: 1;

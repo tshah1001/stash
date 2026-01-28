@@ -126,6 +126,15 @@
         </div>
 
         <div class="sidebar-footer">
+          <!-- Install App Button (hidden until installable) -->
+          <button class="nav-item install-btn hidden" id="install-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Install App
+          </button>
           <button class="theme-toggle" id="theme-toggle">
             <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="5"></circle>
@@ -430,10 +439,65 @@
   <script src="config.js"></script>
   <script src="app.js"></script>
 
-  <!-- Register Service Worker -->
+  <!-- Register Service Worker & PWA Install -->
   <script>
+    // Service Worker Registration
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js');
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('SW registered:', reg.scope))
+        .catch(err => console.error('SW registration failed:', err));
+    }
+
+    // PWA Install Handling
+    let deferredPrompt;
+    const installBtn = document.getElementById('install-btn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('beforeinstallprompt fired');
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Save the event for later
+      deferredPrompt = e;
+      // Show the install button
+      if (installBtn) {
+        installBtn.classList.remove('hidden');
+      }
+    });
+
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) {
+          // Check if already installed
+          if (window.matchMedia('(display-mode: standalone)').matches) {
+            alert('App is already installed!');
+          } else {
+            alert('Install not available. Try: Chrome menu > "Install app" or "Add to Home screen"');
+          }
+          return;
+        }
+        // Show the install prompt
+        deferredPrompt.prompt();
+        // Wait for the user's response
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log('Install outcome:', outcome);
+        // Clear the saved prompt
+        deferredPrompt = null;
+        // Hide the button
+        installBtn.classList.add('hidden');
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      console.log('PWA installed successfully');
+      deferredPrompt = null;
+      if (installBtn) {
+        installBtn.classList.add('hidden');
+      }
+    });
+
+    // Check if already in standalone mode (installed)
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      console.log('Running as installed PWA');
     }
   </script>
 </body>
